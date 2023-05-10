@@ -1,0 +1,47 @@
+/* User Profile Popup */
+.user-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px #ccc;
+    z-index: 9999;
+  }
+  
+  .user-popup-content h4 {
+    margin-top: 0;
+  }
+  
+  .user-popup-content p {
+    margin-bottom: 5px;
+  }
+  
+  .user-popup-close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+  }
+
+  .profile-icon img{
+    width: 25px;
+  }
+
+  .navbar-nav {
+    align-items: center;
+  }
+
+  .collapse.navbar-collapse{
+    justify-content: end;
+  }
+
+  .center-form {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  

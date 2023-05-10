@@ -1,16 +1,18 @@
+import json
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.gis.db.models.functions import AsGeoJSON
 from django.contrib.gis.geos import Point
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.generic.edit import FormView,CreateView
-from django.views.generic import DetailView
-from .forms import SignupForm, LoginForm
+from django.views.generic import DetailView, TemplateView
+from django.views.generic.edit import CreateView, FormView, UpdateView
+from .forms import EditProfileForm, LoginForm, SignupForm
 from .models import UserProfile
-from django.contrib.auth.mixins import LoginRequiredMixin
-
+import folium
 
 class SignUpView(CreateView):
     """
@@ -51,8 +53,7 @@ class LoginView(FormView):
         form.add_error(None, 'Invalid username or password')
         return super().form_invalid(form)
 
-@method_decorator(login_required, name='dispatch')
-class LogoutView(View):
+class LogoutView(LoginRequiredMixin, View):
     """
     This class logs out a user and redirects to the map
     """
@@ -60,8 +61,6 @@ class LogoutView(View):
         logout(request)
         return redirect('map')
 
-    
-@method_decorator(login_required, name='dispatch')
 class UserProfileDetailView(LoginRequiredMixin, DetailView):
     """
     This class-based view shows user profile detail to authenticated users
@@ -73,3 +72,67 @@ class UserProfileDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+    
+class EditProfileView(LoginRequiredMixin, UpdateView):
+    """
+    Edit user profile view, requires login, update user data
+    """
+    template_name = 'edit_profile.html'
+    form_class = EditProfileForm
+
+    def get_success_url(self):
+        messages.success(self.request, 'Profile updated successfully.')
+        return reverse_lazy('user_profile', kwargs={'pk': self.request.user.pk})
+
+    def get_object(self):
+        return self.request.user
+  
+class UserMapListView(LoginRequiredMixin, TemplateView):
+    """
+    This class-based view shows a map with markers of user locations
+    """
+    template_name = 'map.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get all UserProfile instances that have a location
+        users_with_location = UserProfile.objects.filter(location__isnull=False)
+
+        # Convert the user locations to GeoJSON
+        user_locations_geojson = users_with_location.annotate(
+            location_geojson=AsGeoJSON('location')
+        ).values('location_geojson')
+
+        # Create a Folium map centered on the first user's location
+        first_user_location = users_with_location.first().location
+        map_center = [first_user_location.y, first_user_location.x]
+        map_obj = folium.Map(location=map_center, zoom_start=10)
+
+        # Add a marker for each user location
+        for user_location_geojson in user_locations_geojson:
+            location_dict = json.loads(user_location_geojson['location_geojson'])
+            location = Point(location_dict['coordinates'], srid=4326)
+            folium.Marker([location.y, location.x]).add_to(map_obj)
+
+        context['map'] = map_obj._repr_html_()
+        return context
+    
+class UserProfileJsonView(LoginRequiredMixin, View):
+    """
+    Returns JSON data of a user profile if exists, else error
+    """
+    def get(self, request, *args, **kwargs):
+        try:
+            user = UserProfile.objects.get(pk=kwargs['pk'])
+            data = {
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'home_address': user.home_address,
+                'phone_number': user.phone_number,
+            }
+            return JsonResponse(data)
+        except UserProfile.DoesNotExist:
+            return JsonResponse({'error': 'User not found'})

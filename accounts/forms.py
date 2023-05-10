@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.gis import forms as geoforms
+
 from .models import UserProfile
+
 
 class SignupForm(UserCreationForm):
     """
@@ -27,3 +28,14 @@ class LoginForm(forms.Form):
     """
     username = forms.CharField(max_length=254)
     password = forms.CharField(widget=forms.PasswordInput)
+
+
+class EditProfileForm(forms.ModelForm):
+    """
+    Form to edit user profile fields
+    """
+    home_address = forms.CharField(max_length=255, required=False)
+    phone_number = forms.CharField(max_length=20, required=False)
+    class Meta:
+        model = UserProfile
+        fields = ['first_name', 'last_name', 'email', 'home_address', 'phone_number']

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
   <div class="container mt-5">
     <h1 class="text-center mb-5">{{ profile_user.username }}'s Profile</h1>
     <div class="row justify-content-center">
@@ -11,18 +12,27 @@
             <td>{{ profile_user.username }}</td>
           </tr>
           <tr>
+            <th>First Name:</th>
+            <td>{{ profile_user.first_name }}</td>
+          </tr>
+          <tr>
+            <th>Last Name:</th>
+            <td>{{ profile_user.last_name }}</td>
+          </tr>
+          <tr>
             <th>Email:</th>
             <td>{{ profile_user.email }}</td>
           </tr>
           <tr>
             <th>Home Address:</th>
-            <td>{{ profile_user.userprofile.home_address }}</td>
+            <td>{{ profile_user.home_address }}</td>
           </tr>
           <tr>
             <th>Phone Number:</th>
-            <td>{{ profile_user.userprofile.phone_number }}</td>
+            <td>{{ profile_user.phone_number }}</td>
           </tr>
         </table>
+        <a href="{% url 'edit_profile' pk=profile_user.pk %}" class="btn btn-primary">Edit Profile</a>
       </div>
     </div>
   </div>
