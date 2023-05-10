@@ -1,51 +1,34 @@
- // Fetch user profile data and display it in a popup when hovering over the profile icon
- document.querySelector('.profile-icon').addEventListener('mouseover', function(event) {
-    event.preventDefault();
-    const userProfileUrl = this.href.replace('/accounts/profile/', '/user/') + 'json/';
-    fetch(userProfileUrl)
-      .then(response => response.json())
-      .then(userProfile => {
-        const popup = document.createElement('div');
-        popup.className = 'user-popup';
-        popup.innerHTML = `
-          <div class="user-popup-header">
-            <h2>${userProfile.username}</h2>
-            <a href="#" class="user-popup-close">&times;</a>
-          </div>
-          <div class="user-popup-body">
-            <p><strong>Email:</strong> ${userProfile.email}</p>
-            <p><strong>First Name:</strong> ${userProfile.first_name}</p>
-            <p><strong>Last Name:</strong> ${userProfile.last_name}</p>
-            <p><strong>Home Address:</strong> ${userProfile.home_address}</p>
-            <p><strong>Phone Number:</strong> ${userProfile.phone_number}</p>
-          </div>
-        `;
-        document.body.appendChild(popup);
-      })
-      .catch(error => console.error(error));
-  });
-  
-  // Redirect to user profile page when clicking the profile icon
-  document.querySelector('.profile-icon').addEventListener('click', function(event) {
-    event.preventDefault();
-    window.location.href = this.href;
-  });
-  
-  // Close user profile popup when close button is clicked
-  document.addEventListener('click', function(event) {
-    if (event.target.classList.contains('user-popup-close')) {
-      document.querySelector('.user-popup').remove();
-    }
-  });
+// create the popup element
+const popup = document.querySelector('.user-popup');
 
-//   // Close user profile popup when mouse is moved away from icon
-//   document.querySelector('.profile-icon').addEventListener('mouseout', () => {
-//     document.querySelector('.user-popup').style.display = 'none';
-//   });
+const profileIcon = document.querySelector('.profile-icon');
+const userId = profileIcon.dataset.userId;
 
+// show the popup when the user hovers over the profile icon
+profileIcon.addEventListener('mouseenter', async function() {
+  // get the user profile data from the server
+  const response = await fetch(`/user/${userId}/json/`);
+  const profileData = await response.json();
 
+  // update the popup content with the user profile data
+  document.querySelector('#popup-username').textContent = profileData.username;
+  document.querySelector('#popup-email').textContent = profileData.email;
+  document.querySelector('#popup-first-name').textContent = profileData.first_name;
+  document.querySelector('#popup-last-name').textContent = profileData.last_name;
+  document.querySelector('#popup-home-address').textContent = profileData.home_address;
+  document.querySelector('#popup-phone-number').textContent = profileData.phone_number;
 
+  // show the popup
+  popup.style.display = 'block';
+});
 
+// hide the popup when the user moves the mouse away from the profile icon
+profileIcon.addEventListener('mouseleave', function() {
+  popup.style.display = 'none';
+});
 
-
+// redirect to the user profile page when the user clicks on the profile icon
+profileIcon.addEventListener('click', function() {
+  window.location.href = `/accounts/profile/${userId}/`;
+});
 

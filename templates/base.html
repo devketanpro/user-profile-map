@@ -23,11 +23,9 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a href="{% url 'user_profile' pk=request.user.pk %}" class="profile-icon" title="View Profile">
-                            <img src="{% static 'img/circle-user-solid.svg' %}" alt='user image'/>
-                        </a>
-                    </li>
+                    <a href="{% url 'user_profile' pk=request.user.pk %}" class="profile-icon" data-user-id="{{ request.user.pk }}" data-popup-url="{% url 'user_profile_json' pk=request.user.pk %}" title="View Profile">
+                        <img src="{% static 'img/circle-user-solid.svg' %}" alt="user image">
+                    </a>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'logout' %}">Logout</a>
                     </li>
@@ -45,13 +43,13 @@
     <!-- User Profile Popup -->
     <div class="user-popup" style="display: none;">
         <div class="user-popup-content">
-        <h4>User Profile</h4>
-        <p><strong>Username:</strong> <span id="popup-username"></span></p>
-        <p><strong>Email:</strong> <span id="popup-email"></span></p>
-        <p><strong>First Name:</strong> <span id="popup-first-name"></span></p>
-        <p><strong>Last Name:</strong> <span id="popup-last-name"></span></p>
-        <p><strong>Home Address:</strong> <span id="popup-home-address"></span></p>
-        <p><strong>Phone Number:</strong> <span id="popup-phone-number"></span></p>
+            <h4>User Profile</h4>
+            <p><strong>Username:</strong> <span id="popup-username"></span></p>
+            <p><strong>Email:</strong> <span id="popup-email"></span></p>
+            <p><strong>First Name:</strong> <span id="popup-first-name"></span></p>
+            <p><strong>Last Name:</strong> <span id="popup-last-name"></span></p>
+            <p><strong>Home Address:</strong> <span id="popup-home-address"></span></p>
+            <p><strong>Phone Number:</strong> <span id="popup-phone-number"></span></p>
         </div>
     </div>
 

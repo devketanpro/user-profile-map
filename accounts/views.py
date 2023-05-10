@@ -4,11 +4,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import AsGeoJSON
 from django.contrib.gis.geos import Point
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView, TemplateView
+from django.views.generic import DetailView, TemplateView, RedirectView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from .forms import EditProfileForm, LoginForm, SignupForm
 from .models import UserProfile
@@ -52,14 +52,16 @@ class LoginView(FormView):
 
         form.add_error(None, 'Invalid username or password')
         return super().form_invalid(form)
+    
+class LogoutView(LoginRequiredMixin, RedirectView):
+    """
+    This view logs out the user and redirects to login.
+    """
+    url = reverse_lazy('login')
 
-class LogoutView(LoginRequiredMixin, View):
-    """
-    This class logs out a user and redirects to the map
-    """
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         logout(request)
-        return redirect('map')
+        return super().get(request, *args, **kwargs)
 
 class UserProfileDetailView(LoginRequiredMixin, DetailView):
     """
@@ -99,6 +101,10 @@ class UserMapListView(LoginRequiredMixin, TemplateView):
         # Get all UserProfile instances that have a location
         users_with_location = UserProfile.objects.filter(location__isnull=False)
 
+        # If there are no users with locations, return an empty context
+        if not users_with_location.exists():
+            return context
+
         # Convert the user locations to GeoJSON
         user_locations_geojson = users_with_location.annotate(
             location_geojson=AsGeoJSON('location')
@@ -117,6 +123,7 @@ class UserMapListView(LoginRequiredMixin, TemplateView):
 
         context['map'] = map_obj._repr_html_()
         return context
+
     
 class UserProfileJsonView(LoginRequiredMixin, View):
     """
@@ -135,4 +142,4 @@ class UserProfileJsonView(LoginRequiredMixin, View):
             }
             return JsonResponse(data)
         except UserProfile.DoesNotExist:
-            return JsonResponse({'error': 'User not found'})
+            raise Http404('User not found')
