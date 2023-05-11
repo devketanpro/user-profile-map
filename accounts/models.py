@@ -11,6 +11,5 @@ class UserProfile(AbstractUser):
     phone_number = models.CharField(max_length=20, blank=True)
     location = models.PointField(null=True, blank=True)
 
-    # Define a string representation for the model
     def __str__(self):
         return self.username

@@ -1,14 +1,14 @@
 from django.contrib.gis.geos import Point
 from django.test import Client, TestCase
-
-from mixer.backend.django import mixer
 from django.test.client import RequestFactory
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.urls import reverse
+
+from mixer.backend.django import mixer
 
 from .forms import LoginForm, SignupForm
 from .models import UserProfile
 from .views import LogoutView
-
 
 
 class SignUpViewTestCase(TestCase):
@@ -57,6 +57,7 @@ class SignUpViewTestCase(TestCase):
         self.assertFalse(form.is_valid())
 
 class LoginViewTestCase(TestCase):
+    
     def setUp(self):
         self.client = Client()
         self.url = reverse('login')
@@ -99,6 +100,7 @@ class LogoutViewTestCase(TestCase):
         self.assertRedirects(response, reverse('login'), fetch_redirect_response=False)
 
 class UserProfileDetailViewTestCase(TestCase):
+    
     def setUp(self):
         self.client = Client()
         self.profile = UserProfile.objects.create(
@@ -122,6 +124,7 @@ class UserProfileDetailViewTestCase(TestCase):
         self.assertTemplateUsed(response, 'user_profile.html')
 
 class UserMapListViewTestCase(TestCase):
+   
     def setUp(self):
         self.client = Client()
         self.user = mixer.blend(UserProfile)
@@ -140,6 +143,7 @@ class UserMapListViewTestCase(TestCase):
         self.client.logout()
 
 class UserProfileJsonViewTestCase(TestCase):
+    
     def setUp(self):
         self.client = Client()
         self.profile = UserProfile.objects.create(

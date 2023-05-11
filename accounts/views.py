@@ -1,4 +1,6 @@
 import json
+import folium
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,9 +12,10 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, TemplateView, RedirectView
 from django.views.generic.edit import CreateView, FormView, UpdateView
+
 from .forms import EditProfileForm, LoginForm, SignupForm
 from .models import UserProfile
-import folium
+
 
 class SignUpView(CreateView):
     """
@@ -52,7 +55,8 @@ class LoginView(FormView):
 
         form.add_error(None, 'Invalid username or password')
         return super().form_invalid(form)
-    
+
+
 class LogoutView(LoginRequiredMixin, RedirectView):
     """
     This view logs out the user and redirects to login.
@@ -62,6 +66,7 @@ class LogoutView(LoginRequiredMixin, RedirectView):
     def get(self, request, *args, **kwargs):
         logout(request)
         return super().get(request, *args, **kwargs)
+
 
 class UserProfileDetailView(LoginRequiredMixin, DetailView):
     """
@@ -74,7 +79,8 @@ class UserProfileDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
-    
+
+
 class EditProfileView(LoginRequiredMixin, UpdateView):
     """
     Edit user profile view, requires login, update user data
@@ -88,7 +94,8 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
 
     def get_object(self):
         return self.request.user
-  
+
+
 class UserMapListView(LoginRequiredMixin, TemplateView):
     """
     This class-based view shows a map with markers of user locations
