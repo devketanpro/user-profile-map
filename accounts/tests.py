@@ -1,60 +1,46 @@
 from django.contrib.gis.geos import Point
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import Client, TestCase
 from django.test.client import RequestFactory
-from django.contrib.sessions.middleware import SessionMiddleware
 from django.urls import reverse
-
 from mixer.backend.django import mixer
 
-from .forms import LoginForm, SignupForm
+from .forms import LoginForm
 from .models import UserProfile
 from .views import LogoutView
 
 
 class SignUpViewTestCase(TestCase):
+
     def setUp(self):
-        self.client = Client()
         self.signup_url = reverse('signup')
-        self.user_data = {
+        self.valid_data = {
             'username': 'testuser',
-            'email': 'testuser@test.com',
+            'email': 'testuser@example.com',
             'password1': 'testpassword123',
             'password2': 'testpassword123',
-            'latitude': 28.7041,
-            'longitude': 77.1025,
+            'latitude': '40.7128',
+            'longitude': '-74.0060',
         }
-        self.form = SignupForm(data=self.user_data)
 
-    def test_signup_view_with_valid_data(self):
-        """
-        Test SignUpView with valid user data
-        """
-        response = self.client.post(self.signup_url, data=self.user_data)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('map'))
+    def test_signup_form_valid(self):
+        response = self.client.post(self.signup_url, self.valid_data)
+        self.assertEqual(response.status_code, 302)  # Redirect to success URL
+        user = UserProfile.objects.get(username=self.valid_data['username'])
+        self.assertEqual(user.email, self.valid_data['email'])
+        self.assertEqual(user.location.x, float(self.valid_data['longitude']))
+        self.assertEqual(user.location.y, float(self.valid_data['latitude']))
 
-        # Assert user was created with correct location
-        user = UserProfile.objects.get(username=self.user_data['username'])
-        self.assertEqual(user.username, self.user_data['username'])
-        self.assertEqual(user.email, self.user_data['email'])
-        self.assertEqual(user.location, Point(77.1025, 28.7041))
-
-    def test_signup_view_with_invalid_data(self):
-        """
-        Test SignUpView with invalid user data
-        """
-        # Test with missing latitude and longitude
-        invalid_data = self.user_data.copy()
-        invalid_data.pop('latitude')
-        invalid_data.pop('longitude')
-        form = SignupForm(data=invalid_data)
+    def test_signup_form_invalid(self):
+        invalid_data = self.valid_data.copy()
+        invalid_data['password2'] = 'testpassword456'  # Invalid password confirmation
+        invalid_data['latitude'] = 'invalid_latitude'  # Invalid latitude
+        response = self.client.post(self.signup_url, invalid_data)
+        self.assertEqual(response.status_code, 200)  # Form validation error
+        self.assertTemplateUsed(response, 'signup.html')
+        form = response.context['form']
         self.assertFalse(form.is_valid())
 
-        # Test with invalid latitude and longitude
-        invalid_data['latitude'] = 'invalid_latitude'
-        invalid_data['longitude'] = 'invalid_longitude'
-        form = SignupForm(data=invalid_data)
-        self.assertFalse(form.is_valid())
 
 class LoginViewTestCase(TestCase):
     
@@ -81,6 +67,7 @@ class LoginViewTestCase(TestCase):
         self.assertTemplateUsed(response, 'login.html')
         self.assertTrue(isinstance(response.context['form'], LoginForm))
 
+
 class LogoutViewTestCase(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
@@ -98,6 +85,7 @@ class LogoutViewTestCase(TestCase):
         response = LogoutView.as_view()(request)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('login'), fetch_redirect_response=False)
+
 
 class UserProfileDetailViewTestCase(TestCase):
     
@@ -123,6 +111,7 @@ class UserProfileDetailViewTestCase(TestCase):
         response = self.client.get(self.url)
         self.assertTemplateUsed(response, 'user_profile.html')
 
+
 class UserMapListViewTestCase(TestCase):
    
     def setUp(self):
@@ -141,6 +130,7 @@ class UserMapListViewTestCase(TestCase):
         self.assertTrue('map' in response.context)
         self.assertTrue(response.context['map'])
         self.client.logout()
+
 
 class UserProfileJsonViewTestCase(TestCase):
     

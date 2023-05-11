@@ -1,16 +1,16 @@
 import json
-import folium
 
+import folium
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.gis.db.models.functions import AsGeoJSON
 from django.contrib.gis.geos import Point
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import DetailView, TemplateView, RedirectView
+from django.views.generic import DetailView, RedirectView, TemplateView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
 from .forms import EditProfileForm, LoginForm, SignupForm
@@ -68,7 +68,7 @@ class LogoutView(LoginRequiredMixin, RedirectView):
         return super().get(request, *args, **kwargs)
 
 
-class UserProfileDetailView(LoginRequiredMixin, DetailView):
+class UserProfileDetailView(DetailView):
     """
     This class-based view shows user profile detail to authenticated users
     """
@@ -132,7 +132,7 @@ class UserMapListView(LoginRequiredMixin, TemplateView):
         return context
 
     
-class UserProfileJsonView(LoginRequiredMixin, View):
+class UserProfileJsonView(View):
     """
     Returns JSON data of a user profile if exists, else error
     """
@@ -147,6 +147,6 @@ class UserProfileJsonView(LoginRequiredMixin, View):
                 'home_address': user.home_address,
                 'phone_number': user.phone_number,
             }
-            return JsonResponse(data)
+            return JsonResponse(data, status=200)
         except UserProfile.DoesNotExist:
-            raise Http404('User not found')
+            return JsonResponse({"error":"User Does Not Exists"}, status=404)
